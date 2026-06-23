@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Value Creation Tracker — JAFCO Taiwan Fund</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: #F2F7ED; color: #1C1C1C; min-height: 100vh; }
+input, select, textarea, button { font-family: inherit; font-size: inherit; }
+textarea { resize: vertical; }
+
+/* ── Tokens ── */
+:root {
+  --green-900: #1E3D08;
+  --green-700: #3B6D11;
+  --green-500: #639922;
+  --green-300: #97C459;
+  --green-100: #EAF3DE;
+  --green-50:  #F2F7ED;
+  --border:    #D0E8BB;
+  --white:     #FFFFFF;
+  --text-1:    #1C1C1C;
+  --text-2:    #555;
+  --text-3:    #999;
+  --amber-bg:  #FAEEDA;
+  --amber-fg:  #633806;
+  --blue-bg:   #E6F1FB;
+  --blue-fg:   #0C447C;
+  --teal-bg:   #E1F5EE;
+  --teal-fg:   #085041;
+  --red-bg:    #FDEAEA;
+  --red-fg:    #8B1A1A;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ── Layout ── */
+.shell { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+
+/* ── Topbar ── */
+.topbar {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon {
+  width: 38px; height: 38px;
+  background: var(--green-700);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 19px; flex-shrink: 0;
+}
+.brand-name { font-size: 15px; font-weight: 700; color: var(--text-1); line-height: 1.2; }
+.brand-sub  { font-size: 11px; color: var(--green-500); font-weight: 500; margin-top: 1px; }
+.nav { display: flex; gap: 5px; }
+.nav-btn {
+  padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  border: none; cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: background 0.12s, color 0.12s;
+}
+.nav-btn.active { background: var(--green-700); color: #fff; }
+.nav-btn:not(.active) { background: var(--green-100); color: var(--green-900); }
+.nav-btn:not(.active):hover { background: var(--green-300); color: var(--green-900); }
+
+/* ── Stats bar ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 10px; font-weight: 700; color: var(--green-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.stat-num   { font-size: 28px; font-weight: 700; color: var(--text-1); line-height: 1; }
+.stat-sub   { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+/* ── Card ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 14px; }
+.card-title {
+  font-size: 11px; font-weight: 700; color: var(--green-500);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Filters ── */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.filters select {
+  background: var(--green-50); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px;
+  color: var(--text-1); cursor: pointer;
+}
+
+/* ── Entry card ── */
+.entry {
+  background: var(--green-50);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  transition: border-color 0.12s;
+}
+.entry:last-child { margin-bottom: 0; }
+.entry:hover { border-color: var(--green-300); }
+.entry.stale { border-left: 3px solid #E09000; }
+.entry-row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.entry-caseid { font-size: 10px; font-weight: 700; color: var(--green-500); letter-spacing: 0.04em; margin-bottom: 2px; }
+.entry-name   { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.entry-meta   { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.entry-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.entry-desc    { font-size: 12px; color: var(--text-2); margin-top: 8px; line-height: 1.5; }
+.entry-remarks {
+  font-size: 12px; color: var(--text-2); font-style: italic;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  display: flex; gap: 5px;
+}
+.entry-outcome {
+  font-size: 12px; color: var(--text-1);
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.entry-outcome strong { display: block; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.entry-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 4px; }
+.entry-date { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+.stale-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600;
+  background: var(--amber-bg); color: var(--amber-fg);
+}
+
+/* ── Pills / badges ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 99px;
+  font-size: 10px; font-weight: 600; white-space: nowrap;
+}
+.pill-ao      { background: #FAECE7; color: #712B13; }
+.pill-green   { background: var(--green-100); color: var(--green-900); }
+.pill-teal    { background: var(--teal-bg); color: var(--teal-fg); }
+.pill-amber   { background: var(--amber-bg); color: var(--amber-fg); }
+.pill-blue    { background: var(--blue-bg); color: var(--blue-fg); }
+.pill-gray    { background: #EFEFEF; color: #444; }
+.pill-success { background: var(--green-100); color: var(--green-900); border: 1px solid var(--green-300); }
+.pill-red     { background: var(--red-bg); color: var(--red-fg); }
+
+/* ── Icon button ── */
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3); padding: 5px; border-radius: 6px;
+  display: flex; align-items: center; font-size: 15px;
+  transition: background 0.1s, color 0.1s;
+}
+.icon-btn:hover { background: var(--green-100); color: var(--green-700); }
+
+/* ── Form ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.fg-full { grid-column: 1 / -1; }
+.f-group { display: flex; flex-direction: column; gap: 4px; }
+.f-label { font-size: 10px; font-weight: 700; color: var(--green-500); text-transform: uppercase; letter-spacing: 0.05em; }
+.f-input, .f-select, .f-textarea {
+  background: var(--green-50); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+  font-size: 13px; color: var(--text-1);
+  transition: border-color 0.12s;
+}
+.f-input:focus, .f-select:focus, .f-textarea:focus {
+  outline: none; border-color: var(--green-500);
+}
+.f-textarea { min-height: 70px; }
+.save-btn {
+  width: 100%; padding: 10px; border: none; border-radius: var(--radius-sm);
+  background: var(--green-700); color: #fff;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background 0.12s;
+}
+.save-btn:hover { background: var(--green-900); }
+.save-btn:disabled { background: var(--green-300); cursor: not-allowed; }
+
+/* ── Dashboard ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.mini-bar { margin-bottom: 10px; }
+.mini-bar:last-child { margin-bottom: 0; }
+.mini-bar-top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.mini-bar-track { height: 6px; background: var(--green-100); border-radius: 99px; overflow: hidden; }
+.mini-bar-fill  { height: 100%; border-radius: 99px; background: var(--green-700); transition: width 0.4s ease; }
+
+/* ── Settings ── */
+.two-col { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; }
+.s-section { margin-bottom: 18px; }
+.s-section:last-child { margin-bottom: 0; }
+.s-label {
+  font-size: 10px; font-weight: 700; color: var(--green-500);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 8px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 5px;
+}
+.s-note { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 32px; }
+.tag-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 7px;
+  border: 1px solid var(--border); font-size: 12px;
+  background: var(--white); color: var(--text-1);
+}
+.tag-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3); display: flex; align-items: center;
+  padding: 0; font-size: 12px;
+}
+.tag-remove:hover { color: var(--red-fg); }
+.add-row { display: flex; gap: 6px; }
+.add-row input { flex: 1; }
+.add-btn {
+  padding: 0 13px; background: var(--green-100); color: var(--green-900);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.add-btn:hover { background: var(--green-300); }
+.ao-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--white); margin-bottom: 6px; gap: 8px;
+}
+.ao-row:last-child { margin-bottom: 0; }
+.ao-name  { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.ao-email { font-size: 11px; color: var(--green-500); }
+
+/* ── Tab content ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--green-900); color: #fff;
+  padding: 10px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 100;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); padding: 22px 24px;
+  width: 90%; max-width: 560px;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 40px; color: var(--text-3); font-size: 13px; }
+.loading i { font-size: 24px; display: block; margin-bottom: 8px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i class="ti ti-chart-arrows-vertical"></i></div>
+      <div>
+        <div class="brand-name">Value Creation Tracker</div>
+        <div class="brand-sub">JAFCO Taiwan Fund 1 &amp; JAFCO Taiwan Fund 2</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn" onclick="switchTab('new')"><i class="ti ti-plus"></i> New Entry</button>
+      <button class="nav-btn active" onclick="switchTab('entries')"><i class="ti ti-list"></i> All Entries</button>
+      <button class="nav-btn" onclick="switchTab('dashboard')"><i class="ti ti-chart-bar"></i> Dashboard</button>
+      <button class="nav-btn" onclick="switchTab('settings')"><i class="ti ti-settings"></i> Settings</button>
+    </div>
+  </div>
+
+  <!-- NEW ENTRY -->
+  <div id="tab-new" class="tab-content">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-plus" style="font-size:14px;"></i> New entry</div>
+      <div class="form-grid">
+        <div class="f-group">
+          <label class="f-label">Case ID</label>
+          <input class="f-input" id="f-caseid" placeholder="e.g. JTF2-VicOne">
+        </div>
+        <div class="f-group">
+          <label class="f-label">Date</label>
+          <input class="f-input" type="date" id="f-date">
+        </div>
+        <div class="f-group">
+          <label class="f-label">Portfolio Company</label>
+          <select class="f-select" id="f-company"><option value="">Select company...</option></select>
+        </div>
+        <div class="f-group">
+          <label class="f-label">AO 負責人</label>
+          <select class="f-select" id="f-ao"><option value="">Select AO...</option></select>
+        </div>
+        <div class="f-group">
+          <label class="f-label">BD Source</label>
+          <select class="f-select" id="f-source"><option value="">Select source...</option></select>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Resource Type</label>
+          <select class="f-select" id="f-type"><option value="">Select type...</option></select>
+        </div>
+        <div class="f-group fg-full">
+          <label class="f-label">Target / Counterparty</label>
+          <input class="f-input" id="f-target" placeholder="e.g. SPARX Group, Lawson">
+        </div>
+        <div class="f-group">
+          <label class="f-label">Current Status</label>
+          <select class="f-select" id="f-status"><option value="">Select status...</option></select>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Next Follow-up</label>
+          <input class="f-input" type="date" id="f-followup">
+        </div>
+        <div class="f-group fg-full">
+          <label class="f-label">Description</label>
+          <textarea class="f-textarea" id="f-desc" placeholder="What was the resource or introduction?"></textarea>
+        </div>
+        <div class="f-group fg-full">
+          <label class="f-label">Remarks / Comments</label>
+          <textarea class="f-textarea" id="f-remarks" placeholder="AO remarks, meeting notes, observations..."></textarea>
+        </div>
+        <div class="f-group fg-full">
+          <label class="f-label">Outcome / Notes</label>
+          <textarea class="f-textarea" id="f-outcome" placeholder="Result so far, next steps..."></textarea>
+        </div>
+      </div>
+      <button class="save-btn" id="save-btn" onclick="submitEntry()">Save Entry</button>
+    </div>
+  </div>
+
+  <!-- ALL ENTRIES -->
+  <div id="tab-entries" class="tab-content active">
+    <div class="stats" id="stats-bar">
+      <div class="stat"><div class="stat-label">Total Cases</div><div class="stat-num" id="s-total">—</div></div>
+      <div class="stat"><div class="stat-label">Active Pipelines</div><div class="stat-num" id="s-active">—</div></div>
+      <div class="stat"><div class="stat-label">Invested / Closed</div><div class="stat-num" id="s-closed">—</div><div class="stat-sub" id="s-conv"></div></div>
+      <div class="stat"><div class="stat-label">Pending Reminders</div><div class="stat-num" id="s-stale">—</div><div class="stat-sub">stale &gt; 30 days</div></div>
+    </div>
+    <div class="card">
+      <div class="filters">
+        <select id="fl-company" onchange="renderList()"><option value="">All Companies</option></select>
+        <select id="fl-ao"      onchange="renderList()"><option value="">All AOs</option></select>
+        <select id="fl-source"  onchange="renderList()"><option value="">All Sources</option></select>
+        <select id="fl-type"    onchange="renderList()"><option value="">All Types</option></select>
+        <select id="fl-status"  onchange="renderList()"><option value="">All Statuses</option></select>
+      </div>
+      <div id="entries-list"><div class="loading"><i class="ti ti-loader"></i>Loading entries...</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab-content">
+    <div class="stats" style="margin-bottom:16px;">
+      <div class="stat"><div class="stat-label">Total Cases</div><div class="stat-num" id="d-total">—</div></div>
+      <div class="stat"><div class="stat-label">Active Pipelines</div><div class="stat-num" id="d-active">—</div></div>
+      <div class="stat"><div class="stat-label">Invested / Closed</div><div class="stat-num" id="d-closed">—</div><div class="stat-sub" id="d-conv"></div></div>
+      <div class="stat"><div class="stat-label">Stale Cases</div><div class="stat-num" id="d-stale">—</div><div class="stat-sub">&gt; 30 days no update</div></div>
+    </div>
+    <div class="dash-grid" id="dash-grid">
+      <div class="card"><div class="card-title"><i class="ti ti-antenna" style="font-size:13px;"></i> By BD Source</div><div id="d-source"></div></div>
+      <div class="card"><div class="card-title"><i class="ti ti-tag" style="font-size:13px;"></i> By Resource Type</div><div id="d-type"></div></div>
+      <div class="card"><div class="card-title"><i class="ti ti-user" style="font-size:13px;"></i> By AO</div><div id="d-ao"></div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" class="tab-content">
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="s-section">
+            <div class="s-label"><i class="ti ti-building" style="font-size:12px;"></i> Portfolio Companies</div>
+            <div class="tag-list" id="set-companies"></div>
+            <div class="add-row">
+              <input class="f-input" id="new-company" placeholder="Add company..." onkeydown="if(event.key==='Enter') addItem('companies')">
+              <button class="add-btn" onclick="addItem('companies')"><i class="ti ti-plus"></i> Add</button>
+            </div>
+          </div>
+          <div class="s-section">
+            <div class="s-label"><i class="ti ti-antenna" style="font-size:12px;"></i> BD Sources</div>
+            <div class="tag-list" id="set-sources"></div>
+            <div class="add-row">
+              <input class="f-input" id="new-source" placeholder="Add source..." onkeydown="if(event.key==='Enter') addItem('sources')">
+              <button class="add-btn" onclick="addItem('sources')"><i class="ti ti-plus"></i> Add</button>
+            </div>
+          </div>
+          <div class="s-section">
+            <div class="s-label"><i class="ti ti-tag" style="font-size:12px;"></i> Resource Types</div>
+            <div class="tag-list" id="set-types"></div>
+            <div class="add-row">
+              <input class="f-input" id="new-type" placeholder="Add type..." onkeydown="if(event.key==='Enter') addItem('types')">
+              <button class="add-btn" onclick="addItem('types')"><i class="ti ti-plus"></i> Add</button>
+            </div>
+          </div>
+          <div class="s-section" style="margin-bottom:0;">
+            <div class="s-label"><i class="ti ti-circle-check" style="font-size:12px;"></i> Pipeline Statuses</div>
+            <div class="tag-list" id="set-statuses"></div>
+            <div class="add-row">
+              <input class="f-input" id="new-status" placeholder="Add status..." onkeydown="if(event.key==='Enter') addItem('statuses')">
+              <button class="add-btn" onclick="addItem('statuses')"><i class="ti ti-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="s-section" style="margin-bottom:0;">
+            <div class="s-label"><i class="ti ti-users" style="font-size:12px;"></i> Team Members (AO) &amp; Emails</div>
+            <div class="s-note">Email is used for 30-day stale reminders.</div>
+            <div id="set-aos" style="margin-bottom:10px;"></div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <input class="f-input" id="new-ao-name"  placeholder="Name...">
+              <input class="f-input" id="new-ao-email" placeholder="email@company.com">
+              <button class="add-btn" style="width:100%;padding:8px;" onclick="addAO()"><i class="ti ti-plus"></i> Add Member</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Edit Entry</span>
+      <button class="icon-btn" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="f-group">
+        <label class="f-label">Case ID</label>
+        <input class="f-input" id="e-caseid">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Date</label>
+        <input class="f-input" type="date" id="e-date">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Portfolio Company</label>
+        <select class="f-select" id="e-company"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">AO 負責人</label>
+        <select class="f-select" id="e-ao"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">BD Source</label>
+        <select class="f-select" id="e-source"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Resource Type</label>
+        <select class="f-select" id="e-type"></select>
+      </div>
+      <div class="f-group fg-full">
+        <label class="f-label">Target / Counterparty</label>
+        <input class="f-input" id="e-target">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Current Status</label>
+        <select class="f-select" id="e-status"></select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Next Follow-up</label>
+        <input class="f-input" type="date" id="e-followup">
+      </div>
+      <div class="f-group fg-full">
+        <label class="f-label">Description</label>
+        <textarea class="f-textarea" id="e-desc"></textarea>
+      </div>
+      <div class="f-group fg-full">
+        <label class="f-label">Remarks / Comments</label>
+        <textarea class="f-textarea" id="e-remarks"></textarea>
+      </div>
+      <div class="f-group fg-full">
+        <label class="f-label">Outcome / Notes</label>
+        <textarea class="f-textarea" id="e-outcome"></textarea>
+      </div>
+    </div>
+    <button class="save-btn" id="edit-save-btn" onclick="saveEdit()">Save Changes</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbw0xqpHmAZksm3u4kimcUUDmjy2d3JoTUlQmbtLWDhBoIAcNI1U7WJWZFg7_rLpVo-I/exec';
+
+const DEFAULTS = {
+  companies: [],
+  sources:   ['JAFCO BD', 'Bee/Ants BD', 'Taiwan Team'],
+  types:     ['媒合日本投資人', '媒合日本通路/客戶', '市場情報/研究'],
+  statuses:  ['Intro sent', 'Meeting scheduled', 'NDA / Due diligence', 'Invested / Closed', 'Passed'],
+  aos:       []
+};
+
+let entries  = [];
+let settings = JSON.parse(JSON.stringify(DEFAULTS));
+let editingId = null;
+
+// ── API ──────────────────────────────────────────
+async function apiFetch(params) {
+  const url = API + '?' + new URLSearchParams(params);
+  const r = await fetch(url);
+  return r.json();
+}
+async function apiPost(body) {
+  const r = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ── Init ──────────────────────────────────────────
+async function init() {
+  try {
+    const [settingsRes, entriesRes] = await Promise.all([
+      apiFetch({ action: 'getSettings' }),
+      apiFetch({ action: 'getAll' })
+    ]);
+    if (settingsRes.settings) {
+      settings = { ...DEFAULTS, ...settingsRes.settings };
+      if (!Array.isArray(settings.aos)) settings.aos = [];
+    }
+    entries = entriesRes.entries || [];
+  } catch(e) {
+    showToast('⚠ Could not connect to server');
+  }
+  document.getElementById('f-date').value = today();
+  refreshDropdowns();
+  renderList();
+  renderSettings();
+  updateStats();
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+function uid()   { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function daysSince(iso) {
+  if (!iso) return 999;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+function isStale(e) {
+  const terminal = ['Invested / Closed', 'Passed'];
+  if (terminal.includes(e.status)) return false;
+  return daysSince(e.updatedAt || e.createdAt) >= 30;
+}
+
+// ── Dropdowns ──────────────────────────────────────
+function refreshDropdowns() {
+  const defs = [
+    { ids:['f-company','e-company','fl-company'], key:'companies', blank:'Select company...', filterBlank:'All Companies' },
+    { ids:['f-ao'],                               key:'aos',       blank:'Select AO...',      filterBlank:null },
+    { ids:['e-ao'],                               key:'aos',       blank:'Select AO...',      filterBlank:null },
+    { ids:['fl-ao'],                              key:'aos',       blank:'All AOs',           filterBlank:'All AOs' },
+    { ids:['f-source','e-source','fl-source'],    key:'sources',   blank:'Select source...',  filterBlank:'All Sources' },
+    { ids:['f-type','e-type','fl-type'],          key:'types',     blank:'Select type...',    filterBlank:'All Types' },
+    { ids:['f-status','e-status','fl-status'],    key:'statuses',  blank:'Select status...',  filterBlank:'All Statuses' },
+  ];
+  defs.forEach(({ ids, key, blank, filterBlank }) => {
+    ids.forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      const cur = el.value;
+      const isFilter = id.startsWith('fl-');
+      const label = isFilter ? (filterBlank || blank) : blank;
+      const arr = key === 'aos'
+        ? settings.aos.map(a => a.name || a)
+        : (settings[key] || []);
+      el.innerHTML = `<option value="">${label}</option>` +
+        arr.map(v => `<option value="${v}">${v}</option>`).join('');
+      if (cur && arr.includes(cur)) el.value = cur;
+    });
+  });
+}
+
+// ── Stats ──────────────────────────────────────────
+function updateStats() {
+  const total  = entries.length;
+  const closed = entries.filter(e => e.status === 'Invested / Closed').length;
+  const active = entries.filter(e => !['Invested / Closed','Passed'].includes(e.status)).length;
+  const stale  = entries.filter(isStale).length;
+  const conv   = total ? Math.round(closed/total*100) : 0;
+  ['s-total','d-total'].forEach(id => setText(id, total));
+  ['s-active','d-active'].forEach(id => setText(id, active));
+  ['s-closed','d-closed'].forEach(id => setText(id, closed));
+  ['s-stale','d-stale'].forEach(id => setText(id, stale));
+  ['s-conv','d-conv'].forEach(id => setText(id, conv + '% conversion'));
+}
+function setText(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
+
+// ── Render entries ──────────────────────────────────
+function renderList() {
+  const fc  = document.getElementById('fl-company').value;
+  const fa  = document.getElementById('fl-ao').value;
+  const fs  = document.getElementById('fl-source').value;
+  const ft  = document.getElementById('fl-type').value;
+  const fst = document.getElementById('fl-status').value;
+  const list = entries.filter(e =>
+    (!fc  || e.company === fc)  &&
+    (!fa  || e.ao === fa)       &&
+    (!fs  || e.source === fs)   &&
+    (!ft  || e.type === ft)     &&
+    (!fst || e.status === fst)
+  );
+  const el = document.getElementById('entries-list');
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px;"><i class="ti ti-database-off" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4;"></i>No entries yet — add your first one above.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(e => {
+    const stale = isStale(e);
+    const ds = daysSince(e.updatedAt || e.createdAt);
+    return `<div class="entry${stale?' stale':''}">
+      <div class="entry-row1">
+        <div style="min-width:0;">
+          ${e.caseid ? `<div class="entry-caseid">${e.caseid}</div>` : ''}
+          <div class="entry-name">${e.company}${e.target ? ' → ' + e.target : ''}</div>
+          <div class="entry-meta">
+            ${e.ao ? `<span class="pill pill-ao"><i class="ti ti-user" style="font-size:10px;"></i>${e.ao}</span>` : ''}
+            <span class="pill pill-green">${e.source}</span>
+            <span class="pill pill-gray">${e.type}</span>
+            ${statusPill(e.status)}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+          ${stale ? `<span class="stale-badge"><i class="ti ti-bell" style="font-size:10px;"></i> ${ds}d no update</span>` : ''}
+          <div class="entry-actions">
+            <button class="icon-btn" onclick="openEdit('${e.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+            <button class="icon-btn" onclick="deleteEntry('${e.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+      ${e.desc    ? `<div class="entry-desc">${e.desc}</div>` : ''}
+      ${e.remarks ? `<div class="entry-remarks"><i class="ti ti-message" style="font-size:11px;flex-shrink:0;margin-top:1px;"></i><span>${e.remarks}</span></div>` : ''}
+      ${e.outcome ? `<div class="entry-outcome"><strong>Outcome / Notes</strong>${e.outcome}</div>` : ''}
+      <div class="entry-footer">
+        <span class="entry-date"><i class="ti ti-calendar" style="font-size:11px;"></i>${e.date}</span>
+        ${e.followup ? `<span class="entry-date" style="${e.followup < today() && !['Invested / Closed','Passed'].includes(e.status) ? 'color:var(--amber-fg);font-weight:600;' : ''}"><i class="ti ti-bell" style="font-size:11px;"></i>Follow-up: ${e.followup}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function statusPill(s) {
+  const map = {
+    'Intro sent':          'pill-amber',
+    'Meeting scheduled':   'pill-blue',
+    'NDA / Due diligence': 'pill-teal',
+    'Invested / Closed':   'pill-success',
+    'Passed':              'pill-gray',
+  };
+  const cls = map[s] || 'pill-gray';
+  const icon = s === 'Invested / Closed' ? '✓ ' : '';
+  return `<span class="pill ${cls}">${icon}${s}</span>`;
+}
+
+// ── Dashboard ──────────────────────────────────────
+function renderDashboard() {
+  updateStats();
+  const total = entries.length;
+  const bars = (arr, key) => arr.map(k => {
+    const count = entries.filter(e => e[key] === k).length;
+    const pct   = total ? Math.round(count/total*100) : 0;
+    return `<div class="mini-bar">
+      <div class="mini-bar-top"><span>${k}</span><span style="font-weight:600;">${count}</span></div>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-3);font-size:12px;">No data yet</div>';
+
+  document.getElementById('d-source').innerHTML = bars(settings.sources, 'source');
+  document.getElementById('d-type').innerHTML   = bars(settings.types,   'type');
+  const aoNames = settings.aos.map(a => a.name || a);
+  document.getElementById('d-ao').innerHTML     = bars(aoNames, 'ao');
+}
+
+// ── Submit new ──────────────────────────────────────
+async function submitEntry() {
+  const company = document.getElementById('f-company').value;
+  const source  = document.getElementById('f-source').value;
+  const type    = document.getElementById('f-type').value;
+  if (!company || !source || !type) { showToast('⚠ Please fill in Company, Source, and Type'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const now = new Date().toISOString();
+  const entry = {
+    id:        uid(),
+    caseid:    document.getElementById('f-caseid').value.trim(),
+    date:      document.getElementById('f-date').value || today(),
+    company, source, type,
+    ao:        document.getElementById('f-ao').value,
+    target:    document.getElementById('f-target').value.trim(),
+    desc:      document.getElementById('f-desc').value.trim(),
+    status:    document.getElementById('f-status').value || settings.statuses[0] || '',
+    followup:  document.getElementById('f-followup').value,
+    remarks:   document.getElementById('f-remarks').value.trim(),
+    outcome:   document.getElementById('f-outcome').value.trim(),
+    createdAt: now, updatedAt: now
+  };
+  try {
+    await apiPost({ action: 'upsert', entry });
+    entries.unshift(entry);
+    ['f-caseid','f-target','f-desc','f-remarks','f-outcome','f-followup'].forEach(id => document.getElementById(id).value = '');
+    ['f-company','f-ao','f-source','f-type','f-status'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-date').value = today();
+    showToast('✓ Entry saved');
+    updateStats();
+    switchTab('entries');
+  } catch(e) { showToast('⚠ Save failed, please retry'); }
+  btn.disabled = false; btn.textContent = 'Save Entry';
+}
+
+// ── Edit ──────────────────────────────────────────
+function openEdit(id) {
+  const e = entries.find(x => x.id === id); if (!e) return;
+  editingId = id;
+  refreshDropdowns();
+  const fields = ['caseid','date','company','ao','source','type','target','desc','status','followup','remarks','outcome'];
+  fields.forEach(f => {
+    const el = document.getElementById('e-' + f); if (!el) return;
+    el.value = e[f] || '';
+  });
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); editingId = null; }
+
+async function saveEdit() {
+  const idx = entries.findIndex(x => x.id === editingId); if (idx < 0) return;
+  const btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const fields = ['caseid','date','company','ao','source','type','target','desc','status','followup','remarks','outcome'];
+  const updated = { ...entries[idx], updatedAt: new Date().toISOString() };
+  fields.forEach(f => {
+    const el = document.getElementById('e-' + f); if (el) updated[f] = el.value;
+  });
+  try {
+    await apiPost({ action: 'upsert', entry: updated });
+    entries[idx] = updated;
+    closeModal(); renderList(); updateStats();
+    showToast('✓ Entry updated');
+  } catch(e) { showToast('⚠ Update failed'); }
+  btn.disabled = false; btn.textContent = 'Save Changes';
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  try {
+    await apiPost({ action: 'delete', id });
+    entries = entries.filter(e => e.id !== id);
+    renderList(); updateStats();
+    showToast('Entry deleted');
+  } catch(e) { showToast('⚠ Delete failed'); }
+}
+
+// ── Settings ──────────────────────────────────────
+function renderSettings() {
+  ['companies','sources','types','statuses'].forEach(key => {
+    const el = document.getElementById('set-' + key); if (!el) return;
+    const arr = settings[key] || [];
+    el.innerHTML = arr.length
+      ? arr.map(v => `<span class="tag-item">${v}<button class="tag-remove" onclick="removeItem('${key}','${v.replace(/'/g,"\\'")}')"><i class="ti ti-x" style="font-size:11px;"></i></button></span>`).join('')
+      : `<span style="font-size:12px;color:var(--text-3);">Nothing added yet.</span>`;
+  });
+  const aoEl = document.getElementById('set-aos');
+  const aos  = settings.aos || [];
+  aoEl.innerHTML = aos.length
+    ? aos.map((a, i) => `<div class="ao-row">
+        <div><div class="ao-name">${a.name}</div><div class="ao-email">${a.email || '—'}</div></div>
+        <button class="icon-btn" onclick="removeAO(${i})" title="Remove"><i class="ti ti-trash"></i></button>
+      </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">No team members yet.</div>`;
+}
+
+function addItem(key) {
+  const inputId = { companies:'new-company', sources:'new-source', types:'new-type', statuses:'new-status' }[key];
+  const val = document.getElementById(inputId).value.trim();
+  if (!val || (settings[key] || []).includes(val)) return;
+  settings[key].push(val);
+  document.getElementById(inputId).value = '';
+  saveSettings();
+}
+
+function removeItem(key, val) {
+  settings[key] = (settings[key] || []).filter(v => v !== val);
+  saveSettings();
+}
+
+function addAO() {
+  const name  = document.getElementById('new-ao-name').value.trim();
+  const email = document.getElementById('new-ao-email').value.trim();
+  if (!name) return;
+  if (!settings.aos) settings.aos = [];
+  settings.aos.push({ name, email });
+  document.getElementById('new-ao-name').value  = '';
+  document.getElementById('new-ao-email').value = '';
+  saveSettings();
+}
+
+function removeAO(idx) {
+  settings.aos.splice(idx, 1);
+  saveSettings();
+}
+
+async function saveSettings() {
+  refreshDropdowns();
+  renderSettings();
+  try { await apiPost({ action: 'saveSettings', settings }); } catch(e) {}
+}
+
+// ── Tab switching ──────────────────────────────────
+function switchTab(name) {
+  const names = ['new','entries','dashboard','settings'];
+  document.querySelectorAll('.tab-content').forEach((t,i) => t.classList.toggle('active', names[i] === name));
+  document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.toggle('active', names[i] === name));
+  if (name === 'entries')   { renderList(); updateStats(); }
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'settings')  renderSettings();
+}
+
+// ── Toast ──────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>
