@@ -550,25 +550,22 @@ let editingId = null;
 // ── API (JSONP to bypass CORS) ────────────────────
 function jsonp(params) {
   return new Promise((resolve, reject) => {
-    const cbName = 'cb_' + Math.random().toString(36).slice(2);
+    const cbName = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => {
-      delete window[cbName];
+      window[cbName] = null;
       reject(new Error('timeout'));
-    }, 15000);
+    }, 20000);
     window[cbName] = (data) => {
       clearTimeout(timeout);
-      delete window[cbName];
-      const el = document.getElementById('jsonp-' + cbName);
-      if (el) el.remove();
+      window[cbName] = null;
       resolve(data);
     };
-    params.callback = cbName;
-    const url = API + '?' + new URLSearchParams(params);
+    const p = Object.assign({}, params, { callback: cbName });
+    const url = API + '?' + Object.keys(p).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k])).join('&');
     const s = document.createElement('script');
-    s.id = 'jsonp-' + cbName;
     s.src = url;
-    s.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('script error')); };
-    document.head.appendChild(s);
+    s.onerror = () => { clearTimeout(timeout); window[cbName] = null; reject(new Error('load error')); };
+    document.body.appendChild(s);
   });
 }
 
