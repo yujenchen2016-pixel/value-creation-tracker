@@ -554,10 +554,13 @@ async function apiFetch(params) {
   return r.json();
 }
 async function apiPost(body) {
-  const r = await fetch(API, {
-    method: 'POST',
-    body: JSON.stringify(body)
-  });
+  // Use GET with params to avoid CORS preflight issues with Apps Script
+  const params = { action: body.action };
+  if (body.entry)    params.entry    = JSON.stringify(body.entry);
+  if (body.id)       params.id       = body.id;
+  if (body.settings) params.settings = JSON.stringify(body.settings);
+  const url = API + '?' + new URLSearchParams(params);
+  const r = await fetch(url);
   return r.json();
 }
 
