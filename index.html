@@ -547,21 +547,41 @@ let entries  = [];
 let settings = JSON.parse(JSON.stringify(DEFAULTS));
 let editingId = null;
 
-// ── API ──────────────────────────────────────────
-async function apiFetch(params) {
-  const url = API + '?' + new URLSearchParams(params);
-  const r = await fetch(url);
-  return r.json();
+// ── API (JSONP to bypass CORS) ────────────────────
+function jsonp(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error('timeout'));
+    }, 15000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const el = document.getElementById('jsonp-' + cbName);
+      if (el) el.remove();
+      resolve(data);
+    };
+    params.callback = cbName;
+    const url = API + '?' + new URLSearchParams(params);
+    const s = document.createElement('script');
+    s.id = 'jsonp-' + cbName;
+    s.src = url;
+    s.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('script error')); };
+    document.head.appendChild(s);
+  });
 }
+
+async function apiFetch(params) {
+  return jsonp(params);
+}
+
 async function apiPost(body) {
-  // Use GET with params to avoid CORS preflight issues with Apps Script
   const params = { action: body.action };
   if (body.entry)    params.entry    = JSON.stringify(body.entry);
   if (body.id)       params.id       = body.id;
   if (body.settings) params.settings = JSON.stringify(body.settings);
-  const url = API + '?' + new URLSearchParams(params);
-  const r = await fetch(url);
-  return r.json();
+  return jsonp(params);
 }
 
 // ── Init ──────────────────────────────────────────
